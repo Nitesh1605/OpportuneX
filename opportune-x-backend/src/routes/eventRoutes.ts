@@ -1,19 +1,13 @@
+// src/routes/eventRoutes.ts
 import express from 'express';
-import { createEvent, getEvents, getEventById, updateEvent } from '../controllers/eventController';
-import protect from '../middleware/authMiddleware';
+import { saveEvent, removeEvent } from '../controllers/eventController';
 
 const router = express.Router();
 
-// Get all events
-router.get('/', getEvents);
+// Save event for user
+router.post('/save/:eventId', saveEvent);
 
-// Get event by ID
-router.get('/:id', getEventById);
-
-// Create a new event (Protected route)
-router.post('/', protect, createEvent);
-
-// Update event (Protected route)
-router.put('/:id', protect, updateEvent);
+// Remove event from saved list for user
+router.delete('/remove/:eventId', removeEvent);
 
 export default router;

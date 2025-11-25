@@ -1,5 +1,4 @@
-// src/models/Event.ts
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 interface IEvent extends Document {
   name: string;
@@ -15,11 +14,10 @@ const EventSchema: Schema = new Schema(
     date: { type: String, required: true },
     location: { type: String, required: true },
     description: { type: String, required: true },
-    creator: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Creator reference
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );
 
-const Event = mongoose.model<IEvent>('Event', EventSchema);
-
+const Event = mongoose.model<IEvent>("Event", EventSchema);
 export default Event;
