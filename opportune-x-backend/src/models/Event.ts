@@ -1,28 +1,25 @@
-import mongoose, { Schema, Document } from "mongoose";
+// src/models/Event.ts
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IEvent extends Document {
-  title: string;
-  type: string;
-  organization: string;
-  mode: string;
+interface IEvent extends Document {
+  name: string;
+  date: string;
   location: string;
-  deadline: string;
-  tags?: string[];
-  description?: string;
+  description: string;
+  creator: mongoose.Schema.Types.ObjectId;
 }
 
-const eventSchema = new Schema<IEvent>(
+const EventSchema: Schema = new Schema(
   {
-    title: { type: String, required: true },
-    type: { type: String, required: true },
-    organization: { type: String, required: true },
-    mode: { type: String, required: true },
+    name: { type: String, required: true },
+    date: { type: String, required: true },
     location: { type: String, required: true },
-    deadline: { type: String, required: true },
-    tags: [String],
-    description: String,
+    description: { type: String, required: true },
+    creator: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Creator reference
   },
   { timestamps: true }
 );
 
-export default mongoose.model<IEvent>("Event", eventSchema);
+const Event = mongoose.model<IEvent>('Event', EventSchema);
+
+export default Event;

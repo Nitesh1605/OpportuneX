@@ -1,22 +1,20 @@
+// src/models/User.ts
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface IUser extends Document {
+interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  year?: string;
-  interests?: string[];
+  isAdmin: boolean;
+  savedEvents: mongoose.Types.ObjectId[]; // Adding the savedEvents field
 }
 
-const userSchema = new Schema<IUser>(
-  {
-    name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    year: String,
-    interests: [String],
-  },
-  { timestamps: true }
-);
+const UserSchema: Schema<IUser> = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  isAdmin: { type: Boolean, default: false },
+  savedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }], // Define the savedEvents field
+});
 
-export default mongoose.model<IUser>("User", userSchema);
+export default mongoose.model<IUser>("User", UserSchema);
