@@ -1,55 +1,98 @@
 // src/pages/Register.tsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { registerUser } from "../api/auth";
 
 const Register: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!name || !email || !password) {
+      setError("All fields are required");
+      return;
+    }
+
     try {
-      const { data } = await axios.post("http://localhost:5000/api/auth/register", {
-        name,
-        email,
-        password,
-      });
+      setLoading(true);
+      setError("");
+
+      const data = await registerUser({ name, email, password });
+
       localStorage.setItem("token", data.token);
-      navigate("/dashboard"); // Redirect to dashboard after successful registration
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (data.user.isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
-      setError("Error registering");
+      console.error("Error registering:", err);
+      setError("Error registering. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      {error && <div>{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Register</button>
-      </form>
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2 className="auth-title">Create account</h2>
+        <p className="auth-subtitle">
+          Join OpportuneX to track hackathons, internships and challenges.
+        </p>
+        {error && (
+          <p style={{ color: "#f87171", fontSize: "0.8rem" }}>{error}</p>
+        )}
+        <form onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label>Name</label>
+            <input
+              className="auth-input"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="auth-field">
+            <label>Email</label>
+            <input
+              className="auth-input"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="auth-field">
+            <label>Password</label>
+            <input
+              className="auth-input"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
+        <div className="auth-bottom">
+          Already have an account?
+          <Link to="/login" className="auth-link">
+            Login
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

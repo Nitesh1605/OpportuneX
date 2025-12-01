@@ -1,75 +1,46 @@
-// src/pages/Profile.tsx
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { getProfile, removeSavedEvent } from "../api/user";
 
-interface Event {
-  _id: string;
-  name: string;
-  description: string;
-  date: string;
-  location: string;
-}
+const Profile: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
 
-const Profile = () => {
-  const [savedEvents, setSavedEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  // Fetch saved events for the logged-in user
   useEffect(() => {
-    const fetchSavedEvents = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/user/saved-events", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setSavedEvents(response.data);
-      } catch (error) {
-        console.error("Error fetching saved events:", error);
-      } finally {
-        setLoading(false);
-      }
+    const load = async () => {
+      const token = localStorage.getItem("token") || undefined;
+      const data = await getProfile(token);
+      setUser(data);
     };
-
-    fetchSavedEvents();
+    load();
   }, []);
 
-  const handleRemoveEvent = async (eventId: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/user/saved-events/${eventId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSavedEvents((prev) => prev.filter((event) => event._id !== eventId)); // Remove from UI
-      alert("Event removed from saved list");
-    } catch (error) {
-      console.error("Error removing saved event:", error);
-    }
+  const handleRemove = async (eventId: string) => {
+    const token = localStorage.getItem("token") || undefined;
+    await removeSavedEvent(eventId, token);
+    setUser({
+      ...user,
+      savedEvents: user.savedEvents.filter((e: any) => e._id !== eventId)
+    });
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (!user) return <p>Loading profile...</p>;
 
   return (
-    <div>
-      <h1>Your Profile</h1>
-      <h2>Saved Events</h2>
-      {savedEvents.length === 0 ? (
+    <div style={{ padding: 20 }}>
+      <h2>My Profile</h2>
+      <p><b>Name:</b> {user.name}</p>
+      <p><b>Email:</b> {user.email}</p>
+
+      <h3>Saved Events</h3>
+      {user.savedEvents.length === 0 ? (
         <p>No saved events</p>
       ) : (
-        <ul>
-          {savedEvents.map((event) => (
-            <li key={event._id}>
-              <h3>{event.name}</h3>
-              <p>{event.description}</p>
-              <p>{event.date}</p>
-              <p>{event.location}</p>
-              <button onClick={() => handleRemoveEvent(event._id)}>Remove</button>
-            </li>
-          ))}
-        </ul>
+        user.savedEvents.map((event: any) => (
+          <div key={event._id} style={{ border: "1px solid #ccc", padding: 10 }}>
+            <h4>{event.title}</h4>
+            <p>{event.location}</p>
+            <button onClick={() => handleRemove(event._id)}>Remove</button>
+          </div>
+        ))
       )}
     </div>
   );

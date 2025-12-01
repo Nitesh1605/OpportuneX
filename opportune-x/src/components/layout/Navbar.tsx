@@ -3,11 +3,13 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const token = localStorage.getItem("token");
+  const userRaw = localStorage.getItem("user");
+  const user = userRaw ? JSON.parse(userRaw) : null;
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    // optionally remove other user data
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -26,6 +28,11 @@ const Navbar: React.FC = () => {
           <NavLink to="/dashboard" className="nav-link">
             Dashboard
           </NavLink>
+          {user?.isAdmin && (
+            <NavLink to="/admin" className="nav-link">
+              Admin
+            </NavLink>
+          )}
 
           {!token ? (
             <>

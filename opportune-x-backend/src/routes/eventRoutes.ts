@@ -1,13 +1,20 @@
-// src/routes/eventRoutes.ts
-import express from 'express';
-import { saveEvent, removeEvent } from '../controllers/eventController';
+import express from "express";
+import {
+  createEvent,
+  getAllEvents,
+  getEventDetails,
+  updateEvent,
+  deleteEvent,
+} from "../controllers/eventController";
+import protect from "../middleware/authMiddleware";
+import adminOnly from "../middleware/adminMiddleware"; // you should have this or similar
 
 const router = express.Router();
 
-// Save event for user
-router.post('/save/:eventId', saveEvent);
-
-// Remove event from saved list for user
-router.delete('/remove/:eventId', removeEvent);
+router.post("/", protect, adminOnly, createEvent);
+router.get("/", getAllEvents);
+router.get("/:id", getEventDetails);
+router.put("/:id", protect, adminOnly, updateEvent);
+router.delete("/:id", protect, adminOnly, deleteEvent);
 
 export default router;

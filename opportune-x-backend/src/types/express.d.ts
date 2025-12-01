@@ -1,12 +1,14 @@
 // src/types/express.d.ts
+// This is a TypeScript declaration file — DO NOT import it at runtime.
 
-import { User } from "../models/User"; // Adjust the path to your User model
+import { JwtPayload } from "jsonwebtoken";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: User;  // Adding user to the Request interface
+      // payload we attach on successful token verification
+      user?: JwtPayload & { id?: string }; 
     }
   }
 }
-
+export {}; // make this file a module (prevents global augmentation leaking in some configs)

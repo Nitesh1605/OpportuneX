@@ -1,20 +1,33 @@
+// src/models/Event.ts
 import mongoose, { Schema, Document } from "mongoose";
 
-interface IEvent extends Document {
-  name: string;
-  date: string;
-  location: string;
-  description: string;
-  creator: mongoose.Schema.Types.ObjectId;
+export interface IEvent extends Document {
+  title: string;
+  org: string;
+  type?: string; // Hackathon, Internship, Challenge, Fest, etc.
+  source?: string; // e.g. Unstop, LinkedIn, HackerEarth
+  applyUrl?: string; // external registration link
+  mode?: string;
+  location?: string;
+  deadline?: string | null;
+  tags?: string[];
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const EventSchema: Schema = new Schema(
   {
-    name: { type: String, required: true },
-    date: { type: String, required: true },
-    location: { type: String, required: true },
-    description: { type: String, required: true },
-    creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    title: { type: String, required: true },
+    org: { type: String, required: true },
+    type: { type: String, default: "" },
+    source: { type: String, default: "" },
+    applyUrl: { type: String, default: "" },
+    mode: { type: String },
+    location: { type: String },
+    deadline: { type: String, default: null },
+    tags: { type: [String], default: [] },
+    description: { type: String, default: "" },
   },
   { timestamps: true }
 );

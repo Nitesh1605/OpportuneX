@@ -1,8 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createEvent } from "../api/events";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getEventDetails, updateEvent } from "../api/events";
 
-const CreateEvent: React.FC = () => {
+const EditEvent: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [title, setTitle] = useState("");
   const [org, setOrg] = useState("");
   const [type, setType] = useState("");
@@ -15,14 +18,40 @@ const CreateEvent: React.FC = () => {
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      try {
+        const event = await getEventDetails(id);
+        setTitle(event.title || "");
+        setOrg(event.org || "");
+        setType(event.type || "");
+        setSource(event.source || "");
+        setApplyUrl(event.applyUrl || "");
+        setLocation(event.location || "");
+        setMode(event.mode || "");
+        setDeadline(event.deadline ? event.deadline.substring(0, 10) : "");
+        setTags((event.tags || []).join(", "));
+        setDescription(event.description || "");
+      } catch (err) {
+        console.error("Failed to load event", err);
+      }
+    };
+
+    load();
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in as admin to create events");
+      alert("You must be logged in as admin to edit events");
+      return;
+    }
+
+    if (!id) {
+      setError("Missing event id");
       return;
     }
 
@@ -49,19 +78,19 @@ const CreateEvent: React.FC = () => {
         description,
       };
 
-      await createEvent(payload, token); // ✅ pass token as 2nd arg
-      alert("Event created!");
-      navigate("/"); // back to events list
+      await updateEvent(id, payload, token); // ✅ token is guaranteed string
+      alert("Event updated");
+      navigate(`/events/${id}`);
     } catch (err: any) {
-      console.error("Create event error:", err);
-      const msg = err?.response?.data?.msg || "Failed to create event";
+      console.error("Update event error:", err);
+      const msg = err?.response?.data?.msg || "Failed to update event";
       setError(msg);
     }
   };
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto" }}>
-      <h2>Create Event</h2>
+      <h2>Edit Event</h2>
       {error && <p style={{ color: "red", marginBottom: "0.5rem" }}>{error}</p>}
       <form onSubmit={handleSubmit} className="auth-card">
         <div className="auth-field">
@@ -79,7 +108,6 @@ const CreateEvent: React.FC = () => {
             className="auth-input"
             value={org}
             onChange={(e) => setOrg(e.target.value)}
-            placeholder="e.g. Google, Unstop, College name"
           />
         </div>
 
@@ -105,7 +133,6 @@ const CreateEvent: React.FC = () => {
             className="auth-input"
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            placeholder="e.g. Unstop, LinkedIn, HackerEarth"
           />
         </div>
 
@@ -115,7 +142,6 @@ const CreateEvent: React.FC = () => {
             className="auth-input"
             value={applyUrl}
             onChange={(e) => setApplyUrl(e.target.value)}
-            placeholder="https://..."
           />
         </div>
 
@@ -129,7 +155,7 @@ const CreateEvent: React.FC = () => {
         </div>
 
         <div className="auth-field">
-          <label>Mode (Online / Offline)</label>
+          <label>Mode</label>
           <input
             className="auth-input"
             value={mode}
@@ -153,7 +179,6 @@ const CreateEvent: React.FC = () => {
             className="auth-input"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="hackathon, AI, web"
           />
         </div>
 
@@ -168,11 +193,11 @@ const CreateEvent: React.FC = () => {
         </div>
 
         <button className="btn btn-primary" type="submit">
-          Create Event
+          Update Event
         </button>
       </form>
     </div>
   );
 };
 
-export default CreateEvent;
+export default EditEvent;

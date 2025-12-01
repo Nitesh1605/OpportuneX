@@ -1,18 +1,27 @@
-import jwt from 'jsonwebtoken';
+// src/middleware/authMiddleware.ts
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-const protect = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return res.status(401).json({ msg: 'No token, authorization denied' });
-  }
-
+const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : undefined;
+
+    if (!token) {
+      return res.status(401).json({ msg: "Not authorized, token missing" });
+    }
+
+    const secret = process.env.JWT_SECRET || "yoursecret";
+    const decoded = jwt.verify(token, secret) as { id?: string }; // typed payload
+
+    // Use type assertion because we augmented Request with user in d.ts
+    (req as any).user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ msg: 'Token is not valid' });
+    console.error("Auth protect error:", err);
+    return res.status(401).json({ msg: "Not authorized, token invalid" });
   }
 };
 

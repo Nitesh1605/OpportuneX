@@ -1,28 +1,120 @@
-// src/App.tsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import EventDetails from './pages/EventDetails'; // Import EventDetails
-import Events from './pages/Events';
-import Login from './pages/Login'; // Assuming you have a login page
-import Dashboard from './pages/Dashboard'; // Assuming you have a dashboard page
-import ProtectedRoute from './components/ProtectedRoute'; // Assuming this is your protected route component
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Profile from "./pages/Profile";
 
-const App = () => {
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Events from "./pages/Events";
+import Dashboard from "./pages/Dashboard";
+import EventDetails from "./pages/EventDetails";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/routes/AdminRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import ManageEvents from "./pages/ManageEvents";
+import CreateEvent from "./pages/CreateEvent";
+import EditEvent from "./pages/EditEvent";
+import Layout from "./components/layout/Layout";
+
+const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Events />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <Events />
+            </Layout>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <Layout>
+              <Events />
+            </Layout>
+          }
+        />
+        <Route
+          path="/events/:id"
+          element={
+            <Layout>
+              <EventDetails />
+            </Layout>
+          }
+        />
+
+        {/* User Dashboard */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             </ProtectedRoute>
           }
         />
-        {/* Add a route for the event details page */}
-        <Route path="/event/:id" element={<EventDetails />} />
+
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <Layout>
+                <AdminDashboard />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+
+        {/* Admin Event Management */}
+        <Route
+          path="/admin/events"
+          element={
+            <AdminRoute>
+              <Layout>
+                <ManageEvents />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/events/create"
+          element={
+            <AdminRoute>
+              <Layout>
+                <CreateEvent />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/events/:id/edit"
+          element={
+            <AdminRoute>
+              <Layout>
+                <EditEvent />
+              </Layout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/profile"
+               element={
+                 <ProtectedRoute>
+                   <Layout>
+                     <Profile />
+                   </Layout>
+                 </ProtectedRoute>
+               }
+        />
+        
       </Routes>
     </Router>
   );

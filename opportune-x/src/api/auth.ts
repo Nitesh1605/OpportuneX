@@ -1,19 +1,31 @@
-import API_BASE from "./http";
+// src/api/auth.ts
+import axiosInstance from "./axiosInstance";
 
-export async function registerUser(data: any) {
-  const res = await fetch(`${API_BASE}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin?: boolean;
 }
 
-export async function loginUser(data: any) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export async function registerUser(data: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<AuthResponse> {
+  const res = await axiosInstance.post<AuthResponse>("/auth/register", data);
+  return res.data;
+}
+
+export async function loginUser(data: {
+  email: string;
+  password: string;
+}): Promise<AuthResponse> {
+  const res = await axiosInstance.post<AuthResponse>("/auth/login", data);
+  return res.data;
 }
