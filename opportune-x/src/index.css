@@ -148,6 +148,7 @@ body {
 .hero-gradient {
   background: linear-gradient(135deg, #22c55e, #3b82f6, #a855f7);
   -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
 }
 
@@ -884,4 +885,65 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
+}
+
+/* --- Responsive Overrides --- */
+
+@media (max-width: 768px) {
+  /* Navbar: Stack logo and links */
+  .navbar-inner {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  /* Hero: Reduce size */
+  .hero {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2rem; /* Smaller title */
+  }
+
+  /* Events: Compact filters */
+  .events-layout {
+    gap: 1rem;
+  }
+
+  /* Filters as 2 cols on mobile instead of 1 stack to save space */
+  .filters-grid {
+    grid-template-columns: 1fr 1fr; 
+  }
+
+  /* Modals: Full width */
+  .modal-panel {
+    max-width: 95vw;
+    margin: 0 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* Buttons: Full width on mobile often helps */
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* App container adjustments */
+  .container {
+    padding: 1rem 0.75rem;
+  }
 }
