@@ -2,7 +2,10 @@
 import mongoose from "mongoose";
 
 const connectDB = async (retries = 5, delayMs = 2000) => {
-  const uri = process.env.MONGO_URI as string;
+  let uri = process.env.MONGO_URI as string;
+  if (uri) {
+    uri = uri.trim().replace(/^['"]|['"]$/g, "");
+  }
   if (!uri) {
     console.error("MONGO_URI not set in .env");
     process.exit(1);
