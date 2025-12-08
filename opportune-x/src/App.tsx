@@ -1,13 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Profile from "./pages/Profile";
-
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Events from "./pages/Events";
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/routes/AdminRoute";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -15,6 +13,7 @@ import ManageEvents from "./pages/ManageEvents";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import Layout from "./components/layout/Layout";
+import NotFound from "./pages/NotFound";
 
 const App: React.FC = () => {
   return (
@@ -114,7 +113,14 @@ const App: React.FC = () => {
                  </ProtectedRoute>
                }
         />
-        
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <NotFound />
+            </Layout>
+          }
+        />
       </Routes>
     </Router>
   );

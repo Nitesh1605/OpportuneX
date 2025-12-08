@@ -1,10 +1,13 @@
 import React from "react";
 import EventCard from "./EventCard";
+import { Event } from "../../types/Event";
 
-const EventList: React.FC<{ events: any[]; savedEvents: string[] }> = ({
-  events,
-  savedEvents,
-}) => {
+interface EventListProps {
+  events: Event[];
+  savedEvents: string[];
+}
+
+const EventList: React.FC<EventListProps> = ({ events, savedEvents }) => {
   return (
     <div className="event-grid">
       {events.map((event) => (

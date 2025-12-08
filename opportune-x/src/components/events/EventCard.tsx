@@ -1,33 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { saveEvent } from "../../api/events";
+import { removeSavedEvent } from "../../api/user";
 import LinkedInPostModal from "./LinkedInPostModal";
+import { Event } from "../../types/Event";
 
 export interface EventCardProps {
-  event: any;
+  event: Event;
   savedEvents?: string[];
-  saved?: boolean; // ✅ allow Dashboard to pass saved={true}
+  saved?: boolean;
+  onRemoveSaved?: (eventId: string) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
   event,
   savedEvents = [],
   saved,
+  onRemoveSaved,
 }) => {
+  const eventId = event._id || (event as any).id;
   const initialSaved =
-    typeof saved === "boolean"
-      ? saved
-      : savedEvents.includes(event._id || event.id);
+    typeof saved === "boolean" ? saved : savedEvents.includes(eventId);
 
   const [isSaved, setIsSaved] = useState<boolean>(initialSaved);
   const [showLinkedInModal, setShowLinkedInModal] = useState(false);
+  const [userName, setUserName] = useState<string>();
 
-  // if saved prop changes from parent, update local state
   useEffect(() => {
     if (typeof saved === "boolean") {
       setIsSaved(saved);
     }
   }, [saved]);
+
+  useEffect(() => {
+    try {
+      const userRaw =
+        typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (userRaw) {
+        const parsed = JSON.parse(userRaw);
+        setUserName(parsed?.name);
+      }
+    } catch {
+      setUserName(undefined);
+    }
+  }, []);
 
   const handleSave = async () => {
     try {
@@ -37,7 +53,7 @@ const EventCard: React.FC<EventCardProps> = ({
         return;
       }
 
-      await saveEvent(event._id || event.id, token);
+      await saveEvent(eventId);
       setIsSaved(true);
     } catch (err) {
       console.error("Error saving event:", err);
@@ -45,7 +61,29 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  const organizationName = event.org || event.organization || "the organizing team";
+  const handleRemove = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must login first!");
+        return;
+      }
+
+      await removeSavedEvent(eventId);
+
+      if (onRemoveSaved) {
+        onRemoveSaved(eventId);
+      }
+
+      setIsSaved(false);
+    } catch (err) {
+      console.error("Error removing saved event:", err);
+      alert("Failed to remove saved event");
+    }
+  };
+
+  const organizationName =
+    event.org || (event as any).organization || "the organizing team";
 
   const handleApplyClick = () => {
     if (event.applyUrl) {
@@ -55,68 +93,83 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
+  const deadlineLabel = event.deadline
+    ? new Date(event.deadline).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      })
+    : "Rolling";
+
   return (
     <div className="event-card">
-      <h3>
-        <Link to={`/events/${event._id || event.id}`}>{event.title}</Link>
-      </h3>
-      {event.type && (
-        <p style={{ fontSize: "0.8rem", color: "#6b7280" }}>{event.type}</p>
-      )}
-      {event.source && (
-        <p style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
-          via {event.source}
-        </p>
-      )}
-      {event.description && <p>{event.description}</p>}
-      {(event.deadline || event.date) && (
-        <p>
-          <strong>Deadline:</strong> {event.deadline || event.date}
-        </p>
-      )}
+      <div className="event-card-header">
+        <div>
+          <h3>
+            <Link to={`/events/${eventId}`}>{event.title}</Link>
+          </h3>
+          <p className="event-meta">
+            {organizationName}
+            {event.location ? ` • ${event.location}` : ""}
+          </p>
+        </div>
+        {event.featured && <span className="event-badge">Featured</span>}
+      </div>
 
-      <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+      <div className="event-card-body">
+        <p className="event-type">
+          {event.type || "Opportunity"} • {event.mode || "Flexible"} • Deadline:{" "}
+          {deadlineLabel}
+        </p>
+        {event.source && (
+          <p className="event-source">
+            Listed on{" "}
+            {event.sourceUrl ? (
+              <a href={event.sourceUrl} target="_blank" rel="noreferrer">
+                {event.source}
+              </a>
+            ) : (
+              event.source
+            )}
+          </p>
+        )}
+        {event.description && (
+          <p className="event-description">{event.description}</p>
+        )}
+        {event.tags && event.tags.length > 0 && (
+          <div className="event-tags">
+            {event.tags.slice(0, 4).map((tag) => (
+              <span key={tag} className="event-tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="event-card-actions">
         <button
           onClick={handleSave}
           disabled={isSaved}
-          style={{
-            padding: "10px",
-            background: isSaved ? "#6b7280" : "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: isSaved ? "not-allowed" : "pointer",
-          }}
+          className={`btn ${isSaved ? "btn-disabled" : "btn-primary"}`}
         >
-          {isSaved ? "Saved" : "Save Event"}
+          {isSaved ? "Saved" : "Save"}
         </button>
 
+        {isSaved && onRemoveSaved && (
+          <button className="btn btn-danger" onClick={handleRemove}>
+            Remove
+          </button>
+        )}
+
         {event.applyUrl && (
-          <button
-            onClick={handleApplyClick}
-            style={{
-              padding: "10px",
-              background: "#16a34a",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-success" onClick={handleApplyClick}>
             Apply now
           </button>
         )}
 
         <button
+          className="btn btn-linkedin"
           onClick={() => setShowLinkedInModal(true)}
-          style={{
-            padding: "10px",
-            background: "#0a66c2",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
         >
           LinkedIn post
         </button>
@@ -124,7 +177,13 @@ const EventCard: React.FC<EventCardProps> = ({
 
       {showLinkedInModal && (
         <LinkedInPostModal
-          event={{ title: event.title, organization: organizationName }}
+          event={{
+            title: event.title,
+            organization: organizationName,
+            type: event.type,
+            mode: event.mode,
+          }}
+          userName={userName}
           onClose={() => setShowLinkedInModal(false)}
         />
       )}

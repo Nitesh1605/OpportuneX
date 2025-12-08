@@ -1,34 +1,65 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import EventCard from "../components/events/EventCard";
 import { getSavedEvents } from "../api/events";
-import { getPreferences, updatePreferences } from "../api/user";
+import {
+  AlertPreferencesPayload,
+  getAlertPreferences,
+  getPreferences,
+  updateAlertPreferences,
+  updatePreferences,
+} from "../api/user";
+import AlertsPanel from "../components/alerts/AlertsPanel";
+import { useAlerts } from "../hooks/useAlerts";
 
 const ALL_TYPES = ["Hackathon", "Internship", "Challenge", "Fest", "Other"];
 
+const ALERT_PREF_DEFAULTS: AlertPreferencesPayload = {
+  newMatches: true,
+  weeklyDigest: false,
+  deadlineReminderDays: 3,
+  lookbackDays: 7,
+};
+
 const Dashboard: React.FC = () => {
-  const [savedEvents, setSavedEvents] = useState<any[]>([]);
   const [preferredTypes, setPreferredTypes] = useState<string[]>([]);
-  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [alertPrefs, setAlertPrefs] =
+    useState<AlertPreferencesPayload>(ALERT_PREF_DEFAULTS);
+  const queryClient = useQueryClient();
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const savedEventsQuery = useQuery({
+    queryKey: ["saved-events"],
+    queryFn: getSavedEvents,
+    enabled: Boolean(token),
+  });
+
+  const preferencesQuery = useQuery({
+    queryKey: ["preferred-types"],
+    queryFn: getPreferences,
+    enabled: Boolean(token),
+  });
+
+  const alertPrefsQuery = useQuery({
+    queryKey: ["alert-preferences"],
+    queryFn: getAlertPreferences,
+    enabled: Boolean(token),
+  });
+
+  const alertsQuery = useAlerts(Boolean(token));
 
   useEffect(() => {
-    const load = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    if (preferencesQuery.data?.preferredTypes) {
+      setPreferredTypes(preferencesQuery.data.preferredTypes);
+    }
+  }, [preferencesQuery.data]);
 
-      try {
-        const [saved, prefs] = await Promise.all([
-          getSavedEvents(token),
-          getPreferences(token).catch(() => ({ preferredTypes: [] })),
-        ]);
-        setSavedEvents(saved || []);
-        setPreferredTypes(prefs.preferredTypes || []);
-      } catch (err) {
-        console.error("Error loading dashboard data:", err);
-      }
-    };
-
-    load();
-  }, []);
+  useEffect(() => {
+    if (alertPrefsQuery.data) {
+      setAlertPrefs(alertPrefsQuery.data);
+    }
+  }, [alertPrefsQuery.data]);
 
   const toggleType = (type: string) => {
     setPreferredTypes((prev) =>
@@ -36,68 +67,176 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  const handleSavePreferences = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  const preferencesMutation = useMutation({
+    mutationFn: (types: string[]) => updatePreferences(types),
+    onSuccess: (data) => {
+      setPreferredTypes(data.preferredTypes);
+      queryClient.invalidateQueries({ queryKey: ["preferred-types"] });
+    },
+  });
 
-    try {
-      setSavingPrefs(true);
-      const resp = await updatePreferences(preferredTypes, token);
-      setPreferredTypes(resp.preferredTypes || []);
-      alert("Preferences saved");
-    } catch (err) {
-      console.error("Error saving preferences:", err);
-      alert("Failed to save preferences");
-    } finally {
-      setSavingPrefs(false);
-    }
+  const alertPrefsMutation = useMutation({
+    mutationFn: (payload: Partial<AlertPreferencesPayload>) =>
+      updateAlertPreferences(payload),
+    onSuccess: (data) => {
+      setAlertPrefs(data);
+      queryClient.invalidateQueries({ queryKey: ["alert-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    },
+  });
+
+  const savedEvents = useMemo(
+    () => savedEventsQuery.data || [],
+    [savedEventsQuery.data]
+  );
+
+  const handleRemovedSavedEvent = (eventId: string) => {
+    queryClient.setQueryData(["saved-events"], (prev: any) =>
+      Array.isArray(prev) ? prev.filter((event) => event._id !== eventId) : prev
+    );
   };
 
+  const alertsData = alertsQuery.data?.alerts;
+
   return (
-    <div style={{ maxWidth: 900, margin: "2rem auto" }}>
-      <h2>Your Dashboard</h2>
-
-      <section style={{ marginBottom: "2rem" }}>
-        <h3>Alert preferences</h3>
-        <p style={{ fontSize: "0.9rem", color: "#6b7280" }}>
-          Choose what types of opportunities you care about. We'll highlight these on
-          the homepage.
+    <div style={{ maxWidth: 1100, margin: "2rem auto" }}>
+      <div className="page-header">
+        <h2 className="page-title">Your Dashboard</h2>
+        <p className="page-subtitle">
+          Track saved events, tune your recommendations and stay ahead of
+          deadlines.
         </p>
+      </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "0.5rem" }}>
-          {ALL_TYPES.map((type) => {
-            const checked = preferredTypes.includes(type);
-            return (
-              <label key={type} style={{ fontSize: "0.9rem" }}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleType(type)}
-                  style={{ marginRight: 4 }}
-                />
-                {type}
-              </label>
-            );
-          })}
-        </div>
+      <div className="dashboard-grid">
+        <section className="list-card" id="alerts">
+          <h3>Alerts & reminders</h3>
+          {alertsQuery.isPending ? (
+            <p>Loading alerts...</p>
+          ) : alertsData ? (
+            <AlertsPanel alerts={alertsData} />
+          ) : (
+            <p>No alerts yet. Save events and set preferences to get started.</p>
+          )}
+        </section>
 
-        <button
-          className="btn btn-primary"
-          style={{ marginTop: "0.75rem" }}
-          onClick={handleSavePreferences}
-          disabled={savingPrefs}
-        >
-          {savingPrefs ? "Saving..." : "Save preferences"}
-        </button>
-      </section>
+        <section className="list-card">
+          <h3>Alert settings</h3>
+          <p className="list-item-sub">
+            Control how OpportuneX surfaces new matches and deadline reminders.
+          </p>
 
-      <section>
-        <h3>Your Saved Events</h3>
+          <div className="preference-group">
+            <strong>Opportunity types</strong>
+            <div className="preference-grid">
+              {ALL_TYPES.map((type) => {
+                const checked = preferredTypes.includes(type);
+                return (
+                  <label key={type} className="preference-pill">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleType(type)}
+                    />
+                    {type}
+                  </label>
+                );
+              })}
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => preferencesMutation.mutate(preferredTypes)}
+              disabled={preferencesMutation.isPending}
+            >
+              {preferencesMutation.isPending ? "Saving..." : "Save types"}
+            </button>
+          </div>
+
+          <div className="preference-group">
+            <strong>Alert cadence</strong>
+            <label className="preference-row">
+              <input
+                type="checkbox"
+                checked={alertPrefs.newMatches}
+                onChange={(e) =>
+                  setAlertPrefs((prev) => ({
+                    ...prev,
+                    newMatches: e.target.checked,
+                  }))
+                }
+              />
+              Show me new matches every week
+            </label>
+            <label className="preference-row">
+              <input
+                type="checkbox"
+                checked={alertPrefs.weeklyDigest}
+                onChange={(e) =>
+                  setAlertPrefs((prev) => ({
+                    ...prev,
+                    weeklyDigest: e.target.checked,
+                  }))
+                }
+              />
+              Send me a weekly digest email (soon)
+            </label>
+
+            <label className="preference-row">
+              Deadline reminder (days)
+              <input
+                type="number"
+                min={1}
+                value={alertPrefs.deadlineReminderDays}
+                onChange={(e) =>
+                  setAlertPrefs((prev) => ({
+                    ...prev,
+                    deadlineReminderDays: Number(e.target.value),
+                  }))
+                }
+                className="input"
+                style={{ maxWidth: 120, marginLeft: "auto" }}
+              />
+            </label>
+            <label className="preference-row">
+              New match lookback (days)
+              <input
+                type="number"
+                min={1}
+                value={alertPrefs.lookbackDays}
+                onChange={(e) =>
+                  setAlertPrefs((prev) => ({
+                    ...prev,
+                    lookbackDays: Number(e.target.value),
+                  }))
+                }
+                className="input"
+                style={{ maxWidth: 120, marginLeft: "auto" }}
+              />
+            </label>
+
+            <button
+              className="btn btn-ghost"
+              onClick={() => alertPrefsMutation.mutate(alertPrefs)}
+              disabled={alertPrefsMutation.isPending}
+            >
+              {alertPrefsMutation.isPending ? "Saving..." : "Save alert rules"}
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <section style={{ marginTop: "2rem" }}>
+        <h3>Saved events</h3>
         {savedEvents.length === 0 ? (
           <p>No saved events yet.</p>
         ) : (
-          savedEvents.map((event) => (
-            <EventCard key={event._id} event={event} saved={true} />
+          savedEvents.map((event: any) => (
+            <EventCard
+              key={event._id}
+              event={event}
+              saved={true}
+              onRemoveSaved={handleRemovedSavedEvent}
+            />
           ))
         )}
       </section>

@@ -1,4 +1,4 @@
-// src/types/express.d.ts
+
 // This is a TypeScript declaration file — DO NOT import it at runtime.
 
 import { JwtPayload } from "jsonwebtoken";

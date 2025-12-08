@@ -16,6 +16,8 @@ const EditEvent: React.FC = () => {
   const [deadline, setDeadline] = useState("");
   const [tags, setTags] = useState("");
   const [description, setDescription] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [featured, setFeatured] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,12 +29,14 @@ const EditEvent: React.FC = () => {
         setOrg(event.org || "");
         setType(event.type || "");
         setSource(event.source || "");
+        setSourceUrl(event.sourceUrl || "");
         setApplyUrl(event.applyUrl || "");
         setLocation(event.location || "");
         setMode(event.mode || "");
         setDeadline(event.deadline ? event.deadline.substring(0, 10) : "");
         setTags((event.tags || []).join(", "));
         setDescription(event.description || "");
+        setFeatured(Boolean(event.featured));
       } catch (err) {
         console.error("Failed to load event", err);
       }
@@ -67,6 +71,7 @@ const EditEvent: React.FC = () => {
         org,
         type,
         source,
+        sourceUrl,
         applyUrl,
         location,
         mode,
@@ -76,9 +81,11 @@ const EditEvent: React.FC = () => {
           .map((t) => t.trim())
           .filter(Boolean),
         description,
+        featured,
       };
 
-      await updateEvent(id, payload, token); // ✅ token is guaranteed string
+      // Token is read from localStorage by axiosInstance, so we only send id + payload
+      await updateEvent(id, payload);
       alert("Event updated");
       navigate(`/events/${id}`);
     } catch (err: any) {
@@ -137,6 +144,15 @@ const EditEvent: React.FC = () => {
         </div>
 
         <div className="auth-field">
+          <label>Source URL</label>
+          <input
+            className="auth-input"
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+          />
+        </div>
+
+        <div className="auth-field">
           <label>Apply URL</label>
           <input
             className="auth-input"
@@ -191,6 +207,15 @@ const EditEvent: React.FC = () => {
             rows={4}
           />
         </div>
+
+        <label className="preference-row">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+          />
+          Feature this opportunity on the events page
+        </label>
 
         <button className="btn btn-primary" type="submit">
           Update Event

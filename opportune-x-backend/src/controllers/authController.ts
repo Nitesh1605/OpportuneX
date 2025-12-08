@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "../models/User";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password } = req.body;
 
@@ -44,11 +44,11 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Register error:", err);
-    res.status(500).json({ msg: "Server error" });
+    next(err);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
@@ -82,6 +82,6 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ msg: "Server error" });
+    next(err);
   }
 };

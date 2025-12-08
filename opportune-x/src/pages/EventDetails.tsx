@@ -1,4 +1,4 @@
-// src/pages/EventDetails.tsx
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getEventDetails } from "../api/events";
@@ -10,6 +10,7 @@ const EventDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showLinkedInModal, setShowLinkedInModal] = useState(false);
+  const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -29,6 +30,19 @@ const EventDetails: React.FC = () => {
 
     fetchEventDetails();
   }, [id]);
+
+  useEffect(() => {
+    try {
+      const userRaw =
+        typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (userRaw) {
+        const parsed = JSON.parse(userRaw);
+        setUserName(parsed?.name);
+      }
+    } catch {
+      setUserName(undefined);
+    }
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -58,7 +72,21 @@ const EventDetails: React.FC = () => {
         <p style={{ color: "#6b7280", fontSize: "0.9rem" }}>Type: {event.type}</p>
       )}
       {event.source && (
-        <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>Source: {event.source}</p>
+        <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>
+          Source:{" "}
+          {event.sourceUrl ? (
+            <a
+              href={event.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#60a5fa" }}
+            >
+              {event.source}
+            </a>
+          ) : (
+            event.source
+          )}
+        </p>
       )}
       {event.description && <p style={{ marginTop: "1rem" }}>{event.description}</p>}
 
@@ -75,7 +103,8 @@ const EventDetails: React.FC = () => {
         )}
         {event.deadline && (
           <p>
-            <strong>Deadline:</strong> {event.deadline}
+            <strong>Deadline:</strong>{" "}
+            {new Date(event.deadline).toLocaleDateString()}
           </p>
         )}
         {event.tags && event.tags.length > 0 && (
@@ -119,7 +148,13 @@ const EventDetails: React.FC = () => {
 
       {showLinkedInModal && (
         <LinkedInPostModal
-          event={{ title: event.title, organization: organizationName }}
+          event={{
+            title: event.title,
+            organization: organizationName,
+            type: event.type,
+            mode: event.mode,
+          }}
+          userName={userName}
           onClose={() => setShowLinkedInModal(false)}
         />
       )}

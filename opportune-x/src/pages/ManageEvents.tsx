@@ -13,7 +13,7 @@ const ManageEvents: React.FC = () => {
       setLoading(true);
       setError(null);
       const data = await getAllEvents();
-      setEvents(data);
+      setEvents(data.events || data);
     } catch (err) {
       console.error("Failed to load events", err);
       setError("Failed to load events. Please try again.");
@@ -33,7 +33,8 @@ const ManageEvents: React.FC = () => {
     }
 
     try {
-      await deleteEvent(id, token);
+      // Token is read from localStorage by axiosInstance; we only pass the id
+      await deleteEvent(id);
       await loadEvents(); // Refresh list
     } catch (err) {
       console.error("Delete event error", err);

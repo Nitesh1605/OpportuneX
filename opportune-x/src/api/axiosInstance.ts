@@ -1,4 +1,3 @@
-// src/api/axiosInstance.ts
 import axios from "axios";
 
 // Central Axios instance for the whole app

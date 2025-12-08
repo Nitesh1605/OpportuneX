@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 
 const AdminCreateEvent = () => {
   const [form, setForm] = useState({
@@ -20,16 +20,11 @@ const AdminCreateEvent = () => {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem("token");
+      // Token is handled by axiosInstance interceptor
 
-      const res = await axios.post(
-        "http://localhost:5000/api/events",
-        { ...form, tags: form.tags.split(",") },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await axiosInstance.post(
+        "/events",
+        { ...form, tags: form.tags.split(",") }
       );
 
       alert("Event created successfully!");

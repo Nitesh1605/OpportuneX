@@ -7,12 +7,14 @@ const CreateEvent: React.FC = () => {
   const [org, setOrg] = useState("");
   const [type, setType] = useState("");
   const [source, setSource] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
   const [applyUrl, setApplyUrl] = useState("");
   const [location, setLocation] = useState("");
   const [mode, setMode] = useState("");
   const [deadline, setDeadline] = useState("");
   const [tags, setTags] = useState("");
   const [description, setDescription] = useState("");
+  const [featured, setFeatured] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
@@ -38,6 +40,7 @@ const CreateEvent: React.FC = () => {
         org,
         type,
         source,
+        sourceUrl,
         applyUrl,
         location,
         mode,
@@ -47,9 +50,11 @@ const CreateEvent: React.FC = () => {
           .map((t) => t.trim())
           .filter(Boolean),
         description,
+        featured,
       };
 
-      await createEvent(payload, token); // ✅ pass token as 2nd arg
+      // Token is read from localStorage by axiosInstance, so we only send payload
+      await createEvent(payload);
       alert("Event created!");
       navigate("/"); // back to events list
     } catch (err: any) {
@@ -110,6 +115,16 @@ const CreateEvent: React.FC = () => {
         </div>
 
         <div className="auth-field">
+          <label>Source URL</label>
+          <input
+            className="auth-input"
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+            placeholder="https://www.linkedin.com/..."
+          />
+        </div>
+
+        <div className="auth-field">
           <label>Apply URL</label>
           <input
             className="auth-input"
@@ -166,6 +181,15 @@ const CreateEvent: React.FC = () => {
             rows={4}
           />
         </div>
+
+        <label className="preference-row">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+          />
+          Feature this opportunity on the events page
+        </label>
 
         <button className="btn btn-primary" type="submit">
           Create Event

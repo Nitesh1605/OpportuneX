@@ -1,4 +1,3 @@
-// src/api/auth.ts
 import axiosInstance from "./axiosInstance";
 
 export interface AuthUser {

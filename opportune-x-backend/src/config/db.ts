@@ -1,4 +1,4 @@
-// src/config/db.ts
+
 import mongoose from "mongoose";
 
 const connectDB = async (retries = 5, delayMs = 2000) => {

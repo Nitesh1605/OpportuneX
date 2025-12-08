@@ -1,6 +1,5 @@
-// src/components/events/EventForm.tsx
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../api/axiosInstance";
 
 const EventForm = () => {
   const [event, setEvent] = useState({
@@ -17,7 +16,7 @@ const EventForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/api/events", event);
+      const response = await axiosInstance.post("/events", event);
       console.log(response.data); // Handle the response as needed (e.g., show success message)
     } catch (error) {
       console.error("Error creating event:", error);
