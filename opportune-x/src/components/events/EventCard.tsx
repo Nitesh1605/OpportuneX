@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { saveEvent } from "../../api/events";
 import { removeSavedEvent } from "../../api/user";
 import LinkedInPostModal from "./LinkedInPostModal";
@@ -18,6 +18,7 @@ const EventCard: React.FC<EventCardProps> = ({
   saved,
   onRemoveSaved,
 }) => {
+  const navigate = useNavigate();
   const eventId = event._id || (event as any).id;
   const initialSaved =
     typeof saved === "boolean" ? saved : savedEvents.includes(eventId);
@@ -45,14 +46,21 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   }, []);
 
-  const handleSave = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must login first!");
-        return;
+  const checkAuth = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      if (window.confirm("You must be logged in to perform this action. Go to login?")) {
+        navigate("/login");
       }
+      return false;
+    }
+    return true;
+  };
 
+  const handleSave = async () => {
+    if (!checkAuth()) return;
+
+    try {
       await saveEvent(eventId);
       setIsSaved(true);
     } catch (err) {
@@ -62,13 +70,9 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   const handleRemove = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must login first!");
-        return;
-      }
+    if (!checkAuth()) return;
 
+    try {
       await removeSavedEvent(eventId);
 
       if (onRemoveSaved) {
@@ -86,11 +90,18 @@ const EventCard: React.FC<EventCardProps> = ({
     event.org || (event as any).organization || "the organizing team";
 
   const handleApplyClick = () => {
+    if (!checkAuth()) return;
+
     if (event.applyUrl) {
       window.open(event.applyUrl, "_blank", "noopener,noreferrer");
     } else {
       alert("No apply link available for this opportunity yet.");
     }
+  };
+
+  const handleLinkedInClick = () => {
+    if (!checkAuth()) return;
+    setShowLinkedInModal(true);
   };
 
   const deadlineLabel = event.deadline
@@ -169,7 +180,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
         <button
           className="btn btn-linkedin"
-          onClick={() => setShowLinkedInModal(true)}
+          onClick={handleLinkedInClick}
         >
           LinkedIn post
         </button>

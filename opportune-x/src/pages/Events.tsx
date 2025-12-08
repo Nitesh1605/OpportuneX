@@ -11,6 +11,7 @@ const Events: React.FC = () => {
     type: "All",
     mode: "All",
   });
+  const [showFilters, setShowFilters] = useState(false);
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const queryFilters: EventQueryParams = useMemo(() => {
@@ -98,10 +99,34 @@ const Events: React.FC = () => {
         )}
       </div>
 
+      <div style={{ marginBottom: "1rem" }}>
+        <button
+          className={`btn ${showFilters ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          {showFilters ? "Hide Filters" : "Show Filters"}
+        </button>
+      </div>
+
       <div className="events-layout">
-        <aside className="events-filters">
-          <EventFilters onFilterChange={setFilters} initial={filters} />
-        </aside>
+        {showFilters && (
+          <aside className="events-filters">
+            <EventFilters onFilterChange={setFilters} initial={filters} />
+          </aside>
+        )}
 
         <section className="events-list">
           {preferencesQuery.data?.preferredTypes?.length ? (
