@@ -5,40 +5,28 @@ import { useNavigate } from "react-router-dom";
 const ManageEvents: React.FC = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const loadEvents = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getAllEvents();
       setEvents(data.events || data);
     } catch (err) {
-      console.error("Failed to load events", err);
-      setError("Failed to load events. Please try again.");
+      console.error("Failed to load events:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this event?");
-    if (!confirmed) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You must be logged in as admin.");
-      return;
-    }
-
+    if (!window.confirm("Are you sure you want to delete this opportunity?")) return;
     try {
-      // Token is read from localStorage by axiosInstance; we only pass the id
       await deleteEvent(id);
-      await loadEvents(); // Refresh list
+      await loadEvents();
     } catch (err) {
-      console.error("Delete event error", err);
-      alert("Failed to delete event");
+      console.error("Delete error:", err);
+      alert("Failed to delete opportunity");
     }
   };
 
@@ -46,48 +34,24 @@ const ManageEvents: React.FC = () => {
     loadEvents();
   }, []);
 
-  if (loading) {
-    return <div>Loading events...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading) return <div style={{ padding: "2rem" }}>Loading opportunities...</div>;
 
   return (
-    <div>
-      <h2>Manage Events</h2>
+    <div style={{ maxWidth: 800, margin: "2rem auto", padding: "0 1rem" }}>
+      <h2>Manage Opportunities</h2>
       {events.length === 0 ? (
-        <p>No events created yet.</p>
+        <p>No opportunities created yet.</p>
       ) : (
-        <ul>
+        <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "1rem" }}>
           {events.map((event: any) => (
-            <li
-              key={event._id}
-              style={{ display: "flex", gap: 8, alignItems: "center" }}
-            >
-              <div style={{ flex: 1 }}>
-                <strong>{event.title}</strong> —{" "}
-                {(event.deadline || event.date)
-                  ? String(event.deadline || event.date).slice(0, 10)
-                  : ""}
-                <div style={{ fontSize: 13, color: "#666" }}>
-                  {event.org} • {event.location}
-                </div>
-              </div>
-
+            <li key={event._id} className="list-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <button
-                  onClick={() => navigate(`/admin/events/${event._id}/edit`)}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(event._id)}
-                  style={{ marginLeft: 8 }}
-                >
-                  Delete
-                </button>
+                <strong>{event.title}</strong>
+                <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.85rem", color: "#6b7280" }}>{event.org} • {event.location || "Flexible"}</p>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button className="btn btn-ghost" onClick={() => navigate(`/admin/events/${event._id}/edit`)}>Edit</button>
+                <button className="btn btn-danger" onClick={() => handleDelete(event._id)}>Delete</button>
               </div>
             </li>
           ))}

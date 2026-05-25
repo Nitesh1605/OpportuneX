@@ -12,189 +12,69 @@ export interface EventCardProps {
   onRemoveSaved?: (eventId: string) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({
-  event,
-  savedEvents = [],
-  saved,
-  onRemoveSaved,
-}) => {
+const EventCard: React.FC<EventCardProps> = ({ event, savedEvents = [], saved, onRemoveSaved }) => {
   const navigate = useNavigate();
   const eventId = event._id || (event as any).id;
-  const initialSaved =
-    typeof saved === "boolean" ? saved : savedEvents.includes(eventId);
-
-  const [isSaved, setIsSaved] = useState<boolean>(initialSaved);
+  const [isSaved, setIsSaved] = useState<boolean>(saved ?? savedEvents.includes(eventId));
   const [showLinkedInModal, setShowLinkedInModal] = useState(false);
-  const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
-    if (typeof saved === "boolean") {
-      setIsSaved(saved);
-    }
+    if (typeof saved === "boolean") setIsSaved(saved);
   }, [saved]);
 
-  useEffect(() => {
+  const handleSaveToggle = async () => {
+    if (!localStorage.getItem("token")) return navigate("/login");
     try {
-      const userRaw =
-        typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      if (userRaw) {
-        const parsed = JSON.parse(userRaw);
-        setUserName(parsed?.name);
+      if (isSaved) {
+        await removeSavedEvent(eventId);
+        setIsSaved(false);
+        if (onRemoveSaved) onRemoveSaved(eventId);
+      } else {
+        await saveEvent(eventId);
+        setIsSaved(true);
       }
-    } catch {
-      setUserName(undefined);
-    }
-  }, []);
-
-  const checkAuth = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      if (window.confirm("You must be logged in to perform this action. Go to login?")) {
-        navigate("/login");
-      }
-      return false;
-    }
-    return true;
-  };
-
-  const handleSave = async () => {
-    if (!checkAuth()) return;
-
-    try {
-      await saveEvent(eventId);
-      setIsSaved(true);
     } catch (err) {
-      console.error("Error saving event:", err);
-      alert("Failed to save event");
+      console.error(err);
+      alert("Action failed.");
     }
   };
 
-  const handleRemove = async () => {
-    if (!checkAuth()) return;
-
-    try {
-      await removeSavedEvent(eventId);
-
-      if (onRemoveSaved) {
-        onRemoveSaved(eventId);
-      }
-
-      setIsSaved(false);
-    } catch (err) {
-      console.error("Error removing saved event:", err);
-      alert("Failed to remove saved event");
-    }
-  };
-
-  const organizationName =
-    event.org || (event as any).organization || "the organizing team";
-
-  const handleApplyClick = () => {
-    if (!checkAuth()) return;
-
-    if (event.applyUrl) {
-      window.open(event.applyUrl, "_blank", "noopener,noreferrer");
-    } else {
-      alert("No apply link available for this opportunity yet.");
-    }
-  };
-
-  const handleLinkedInClick = () => {
-    if (!checkAuth()) return;
-    setShowLinkedInModal(true);
-  };
-
-  const deadlineLabel = event.deadline
-    ? new Date(event.deadline).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
-    : "Rolling";
+  const deadlineLabel = event.deadline ? new Date(event.deadline).toLocaleDateString() : "Rolling";
+  const orgName = event.org || (event as any).organization || "the organizing team";
 
   return (
     <div className="event-card">
       <div className="event-card-header">
         <div>
-          <h3>
-            <Link to={`/events/${eventId}`}>{event.title}</Link>
-          </h3>
-          <p className="event-meta">
-            {organizationName}
-            {event.location ? ` • ${event.location}` : ""}
-          </p>
+          <h3><Link to={`/events/${eventId}`}>{event.title}</Link></h3>
+          <p className="event-meta">{orgName}{event.location ? ` • ${event.location}` : ""}</p>
         </div>
         {event.featured && <span className="event-badge">Featured</span>}
       </div>
 
       <div className="event-card-body">
-        <p className="event-type">
-          {event.type || "Opportunity"} • {event.mode || "Flexible"} • Deadline:{" "}
-          {deadlineLabel}
-        </p>
-        {event.source && (
-          <p className="event-source">
-            Listed on{" "}
-            {event.sourceUrl ? (
-              <a href={event.sourceUrl} target="_blank" rel="noreferrer">
-                {event.source}
-              </a>
-            ) : (
-              event.source
-            )}
-          </p>
-        )}
-        {event.description && (
-          <p className="event-description">{event.description}</p>
-        )}
+        <p className="event-type">{event.type || "Opportunity"} • {event.mode || "Flexible"} • Deadline: {deadlineLabel}</p>
+        {event.description && <p className="event-description">{event.description}</p>}
         {event.tags && event.tags.length > 0 && (
           <div className="event-tags">
-            {event.tags.slice(0, 4).map((tag) => (
-              <span key={tag} className="event-tag">
-                {tag}
-              </span>
-            ))}
+            {event.tags.slice(0, 4).map((tag) => <span key={tag} className="event-tag">{tag}</span>)}
           </div>
         )}
       </div>
 
-      <div className="event-card-actions">
-        <button
-          onClick={handleSave}
-          disabled={isSaved}
-          className={`btn ${isSaved ? "btn-disabled" : "btn-primary"}`}
-        >
-          {isSaved ? "Saved" : "Save"}
+      <div className="event-card-actions" style={{ display: "flex", gap: "10px", marginTop: "1rem" }}>
+        <button onClick={handleSaveToggle} className={`btn ${isSaved ? "btn-danger" : "btn-primary"}`}>
+          {isSaved ? "Remove Bookmark" : "Bookmark"}
         </button>
-
-        {isSaved && onRemoveSaved && (
-          <button className="btn btn-danger" onClick={handleRemove}>
-            Remove
-          </button>
-        )}
-
         {event.applyUrl && (
-          <button className="btn btn-success" onClick={handleApplyClick}>
-            Apply now
-          </button>
+          <button className="btn btn-success" onClick={() => window.open(event.applyUrl, "_blank", "noopener,noreferrer")}>Apply Now</button>
         )}
-
-        <button
-          className="btn btn-linkedin"
-          onClick={handleLinkedInClick}
-        >
-          LinkedIn post
-        </button>
+        <button className="btn btn-linkedin" onClick={() => setShowLinkedInModal(true)}>Share on LinkedIn</button>
       </div>
 
       {showLinkedInModal && (
         <LinkedInPostModal
-          event={{
-            title: event.title,
-            organization: organizationName,
-            type: event.type,
-            mode: event.mode,
-          }}
-          userName={userName}
+          event={{ title: event.title, organization: orgName, type: event.type, mode: event.mode }}
           onClose={() => setShowLinkedInModal(false)}
         />
       )}

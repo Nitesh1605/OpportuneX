@@ -1,6 +1,6 @@
 # OpportuneX 🚀
 
-> **A full-stack opportunity discovery platform** for students — browse hackathons, jobs, internships, and challenges in one place, with smart personalization and an admin control panel.
+> **A full-stack opportunity discovery platform** for students — browse hackathons, jobs, internships, and challenges in one place, with an admin control panel.
 
 **Live GitHub:** [github.com/Nitesh1605/OpportuneX](https://github.com/Nitesh1605/OpportuneX)
 
@@ -8,52 +8,40 @@
 
 ## 📌 What is OpportuneX?
 
-Students often miss great opportunities because they're scattered across LinkedIn, Devfolio, Devpost, MLH, and company career pages. **OpportuneX solves that** by aggregating hackathons, jobs, internships, and challenges into a single platform — with filters, saved lists, personalized recommendations, and deadline alerts.
+Students often miss great opportunities because they're scattered across LinkedIn, Devfolio, Devpost, MLH, and company career pages. **OpportuneX solves that** by aggregating hackathons, jobs, internships, and challenges into a single platform — with filters, saved lists, and clean, responsive UI dashboards.
 
 ---
 
 ## ✨ Key Features
 
 ### For Students
-| Feature | Description |
-|---|---|
-| 🔍 **Browse & Search** | Filter by type (Job / Internship / Hackathon), mode (Remote / Hybrid), tags, source, and deadline range |
-| 💾 **Save Opportunities** | Bookmark events and manage them from your personal Dashboard |
-| 🎯 **Personalized Recommendations** | Set preferred types (e.g. Hackathons, Internships) and get matched suggestions |
-| 🔔 **Smart Alerts** | Deadline reminders, new-match alerts, and "closing soon" notifications |
-| 🔗 **Live Apply Links** | Every opportunity links directly to the official apply page |
-| 💼 **LinkedIn Post Generator** | Auto-generate a professional LinkedIn post for any opportunity in one click |
+- 🔍 **Browse & Search**: Filter by category, mode (Remote / Hybrid / In-Person), and text searches instantly.
+- 💾 **Save Opportunities**: Bookmark opportunities and manage them directly from your personal Dashboard.
+- 🔗 **Live Apply Links**: Every opportunity links directly to the official application pages.
+- 💼 **1-Click LinkedIn Post**: Auto-generate a professional LinkedIn update to share your learning journey.
 
 ### For Admins
-| Feature | Description |
-|---|---|
-| 🛡️ **Role-Based Access** | Admin vs user roles enforced at the API level using JWT |
-| ➕ **Event Management** | Create, edit, and delete opportunities from an admin UI |
-| 📊 **Analytics Dashboard** | View total users, events by type, events by source platform |
+- 🛡️ **Role-Based Access**: Admin vs user roles secured at the API level using JSON Web Tokens (JWT).
+- ➕ **Opportunity Control Panel**: Create, edit, and delete opportunities directly from a clean admin UI.
+- 📊 **Platform Analytics**: View site statistics (total users, total opportunities, distributions by type).
 
 ---
 
 ## 🏗️ Tech Stack
 
 ### Frontend
-| Tool | Purpose |
-|---|---|
-| **React 19 + TypeScript** | Component-based UI with full type safety |
-| **React Router v7** | Client-side routing (protected routes, admin routes) |
-| **TanStack React Query** | Server-state management, caching, background refetching |
-| **Axios** | Centralized HTTP client with JWT interceptor |
-| **Vanilla CSS** | Custom dark-mode design system (no Tailwind) |
+- **React 19 + TypeScript**: Modular components with type safety.
+- **React Router v7**: Client-side routing with clean nested layout guards.
+- **Axios**: HTTP client configured with JWT interceptors.
+- **Vanilla CSS**: Curated dark-mode design system without bulky frameworks.
 
 ### Backend
-| Tool | Purpose |
-|---|---|
-| **Node.js + Express 5** | REST API server |
-| **TypeScript** | End-to-end type safety |
-| **MongoDB + Mongoose** | NoSQL database with typed schemas |
-| **JWT (jsonwebtoken)** | Stateless authentication |
-| **Joi** | Request body validation |
-| **Helmet + express-rate-limit** | Security hardening |
-| **bcryptjs** | Password hashing |
+- **Node.js + Express 5**: REST API server.
+- **TypeScript**: End-to-end type safety.
+- **MongoDB + Mongoose**: Cloud NoSQL database with strict schemas.
+- **JWT (jsonwebtoken)**: Stateless token authentication.
+- **Joi**: Request body validation.
+- **Helmet + rate-limit**: Express security hardening.
 
 ---
 
@@ -63,29 +51,19 @@ Students often miss great opportunities because they're scattered across LinkedI
 OpportuneX/
 ├── opportune-x/                  # React Frontend
 │   └── src/
-│       ├── api/                  # Axios API clients (auth, events, user, admin)
-│       ├── components/           # Reusable UI components
-│       │   ├── events/           # EventCard, EventList, EventFilters, LinkedInModal
-│       │   ├── layout/           # Navbar, Footer, Layout
-│       │   └── routes/           # ProtectedRoute, AdminRoute
-│       ├── pages/                # Route-level pages
-│       │   ├── Events.tsx        # All opportunities
-│       │   ├── Jobs.tsx          # Jobs listing
-│       │   ├── Internships.tsx   # Internships listing
-│       │   ├── Dashboard.tsx     # User dashboard + saved events
-│       │   ├── AdminDashboard.tsx
-│       │   ├── Login / Register
-│       │   └── Profile.tsx
-│       └── types/                # Shared TypeScript interfaces
+│       ├── api/                  # API clients (auth, events, user, admin)
+│       ├── components/           # UI Components
+│       │   ├── events/           # EventCard, EventForm, EventFilters, LinkedInModal
+│       │   └── layout/           # Navbar, Layout wrapper
+│       ├── pages/                # Route pages (Events, Jobs, Internships, Dashboard)
+│       └── App.tsx               # Central nested layout router (< 60 lines!)
 │
 └── opportune-x-backend/          # Express Backend
     └── src/
         ├── config/db.ts          # MongoDB connection with retry logic
-        ├── models/               # Mongoose models (User, Event)
-        ├── controllers/          # Business logic (auth, events, user, admin)
-        ├── routes/               # Express routers
-        ├── middleware/           # Auth, admin guard, Joi validation, error handler
-        └── validation/           # Joi schemas
+        ├── models/               # Mongoose schemas
+        ├── controllers/          # Request handlings
+        └── routes/               # API endpoints
 ```
 
 ---
@@ -96,19 +74,15 @@ OpportuneX/
 |---|---|---|---|
 | `POST` | `/api/auth/register` | Public | Register a new user |
 | `POST` | `/api/auth/login` | Public | Login, returns JWT |
-| `GET` | `/api/events` | Public | List events (type, mode, search, tags, deadline filters) |
-| `GET` | `/api/events/:id` | Public | Single event details |
-| `POST` | `/api/events` | Admin | Create event |
-| `PUT` | `/api/events/:id` | Admin | Update event |
-| `DELETE` | `/api/events/:id` | Admin | Delete event |
-| `GET` | `/api/user/saved-events` | User | Get saved events |
-| `POST` | `/api/user/save-event` | User | Save an event |
-| `DELETE` | `/api/user/save-event/:id` | User | Remove saved event |
-| `GET/PUT` | `/api/user/preferences` | User | Get/update preferred types |
-| `GET` | `/api/user/alerts` | User | Get deadline & match alerts |
-| `GET` | `/api/admin/stats` | Admin | Platform analytics |
-
-> Full API reference: [`opportune-x-backend/API.md`](./opportune-x-backend/API.md)
+| `GET` | `/api/events` | Public | List opportunities (type, mode, search filters) |
+| `GET` | `/api/events/:id` | Public | Single opportunity details |
+| `POST` | `/api/events` | Admin | Create opportunity |
+| `PUT` | `/api/events/:id` | Admin | Update opportunity |
+| `DELETE` | `/api/events/:id` | Admin | Delete opportunity |
+| `GET` | `/api/user/saved-events` | User | Get saved opportunities |
+| `POST` | `/api/user/save-event` | User | Bookmark opportunity |
+| `DELETE` | `/api/user/save-event/:id` | User | Remove bookmarked opportunity |
+| `GET` | `/api/admin/stats` | Admin | Site analytics statistics |
 
 ---
 
@@ -140,18 +114,13 @@ CLIENT_URL=http://localhost:3000
 
 Build and start:
 ```bash
-npm run build     # compile TypeScript → dist/
-npm start         # run compiled server
+npm run build
+npm start
 ```
-
-> **Dev mode:** `npm run dev` (uses ts-node + nodemon)
 
 ### 3. Seed sample data
 ```bash
-# Seed hackathons/challenges
 npx ts-node --transpile-only seed_events.ts
-
-# Seed jobs & internships
 npx ts-node --transpile-only seed_jobs_internships.ts
 ```
 
@@ -185,41 +154,21 @@ npm start
 | `CLIENT_URL` | Backend | Allowed CORS origins |
 | `REACT_APP_API_BASE_URL` | Frontend | Backend API base URL |
 
-> ⚠️ Never commit `.env` files. They are in `.gitignore`.
-
 ---
 
 ## 🧠 Key Engineering Decisions
 
-### 1. Centralized Axios Instance
-All API calls go through a single Axios instance (`src/api/axiosInstance.ts`) that automatically attaches the JWT `Authorization` header from `localStorage`. This means auth logic is written once — not repeated in every component.
+### 1. Centralized Axios Interceptors
+All API requests flow through a unified Axios instance (`src/api/axiosInstance.ts`) that automatically attaches the user's JWT authorization token from `localStorage`. This keeps authentication unified and eliminates code repetition.
 
-### 2. React Query for Server State
-Instead of `useEffect` + `useState` for data fetching, React Query handles caching, background refetching, and loading/error states. This keeps components clean and gives users a fast, stale-while-revalidate experience.
+### 2. Lightweight Native Lifecycle States
+To keep bundle sizes small and maintain full control over the rendering cycle, OpportuneX uses native React state (`useState`) and side-effect hooks (`useEffect`). This ensures that data retrieval patterns are simple, explicit, and easy to explain.
 
-### 3. Role-Based Route Protection
-Two middleware layers on the backend:
-- `authMiddleware` — verifies JWT, attaches user to `req.user`
-- `adminMiddleware` — checks `req.user.isAdmin`, returns `403` if not admin
+### 3. Nested Layout Routing
+Leverages React Router's nested routing configuration. This allows the core pages to dynamically inherit the common navbar header layouts without writing repeated wrappers around each route in `App.tsx`.
 
-On the frontend, `<ProtectedRoute>` and `<AdminRoute>` redirect unauthenticated/unauthorized users before rendering.
-
-### 4. Joi Validation at the API Layer
-Every admin write request is validated against a Joi schema before reaching the controller. Invalid payloads return structured `400` errors — protecting the database from malformed data.
-
-### 5. Retry Logic on MongoDB Connection
-The DB connection function retries up to 5 times with a 2-second delay before crashing — making the backend resilient to transient network issues (common on free-tier cloud databases).
-
----
-
-## 💡 What I'd Add Next
-
-- **httpOnly cookie auth** instead of `localStorage` to prevent XSS token theft
-- **Docker + docker-compose** for one-command local setup
-- **CI/CD pipeline** (GitHub Actions) to lint, test, and deploy on push
-- **Pagination** on the events list for large datasets
-- **Email notifications** for deadline reminders using Nodemailer
-- **More test coverage** — Jest + React Testing Library for components
+### 4. Resilient Database Connections
+The MongoDB connection module is built with an automatic retry block that attempts reconnection up to 5 times before exiting. This hardens the backend against network drops common with free NoSQL hosting.
 
 ---
 

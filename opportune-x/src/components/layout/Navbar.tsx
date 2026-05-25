@@ -1,6 +1,5 @@
 import React from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import NotificationBell from "../alerts/NotificationBell";
 
 const Navbar: React.FC = () => {
   const token = localStorage.getItem("token");
@@ -35,7 +34,6 @@ const Navbar: React.FC = () => {
           <NavLink to="/dashboard" className="nav-link">
             Dashboard
           </NavLink>
-          {token && <NotificationBell />}
           {user?.isAdmin && (
             <NavLink to="/admin" className="nav-link">
               Admin

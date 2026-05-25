@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -17,128 +17,37 @@ import EditEvent from "./pages/EditEvent";
 import Layout from "./components/layout/Layout";
 import NotFound from "./pages/NotFound";
 
+const LayoutWrapper: React.FC = () => (
+  <Layout>
+    <Outlet />
+  </Layout>
+);
+
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route
-          path="/"
-          element={
-            <Layout>
-              <Events />
-            </Layout>
-          }
-        />
-        <Route
-          path="/events"
-          element={
-            <Layout>
-              <Events />
-            </Layout>
-          }
-        />
-        <Route
-          path="/events/:id"
-          element={
-            <Layout>
-              <EventDetails />
-            </Layout>
-          }
-        />
-        <Route
-          path="/jobs"
-          element={
-            <Layout>
-              <Jobs />
-            </Layout>
-          }
-        />
-        <Route
-          path="/internships"
-          element={
-            <Layout>
-              <Internships />
-            </Layout>
-          }
-        />
 
-        {/* User Dashboard */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Dashboard />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        {/* Nest all pages inside LayoutWrapper to inherit header and footer automatically */}
+        <Route element={<LayoutWrapper />}>
+          <Route path="/" element={<Events />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/internships" element={<Internships />} />
+          
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-        {/* Admin Dashboard */}
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <Layout>
-                <AdminDashboard />
-              </Layout>
-            </AdminRoute>
-          }
-        />
-
-        {/* Admin Event Management */}
-        <Route
-          path="/admin/events"
-          element={
-            <AdminRoute>
-              <Layout>
-                <ManageEvents />
-              </Layout>
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/events/create"
-          element={
-            <AdminRoute>
-              <Layout>
-                <CreateEvent />
-              </Layout>
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/events/:id/edit"
-          element={
-            <AdminRoute>
-              <Layout>
-                <EditEvent />
-              </Layout>
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/profile"
-               element={
-                 <ProtectedRoute>
-                   <Layout>
-                     <Profile />
-                   </Layout>
-                 </ProtectedRoute>
-               }
-        />
-        <Route
-          path="*"
-          element={
-            <Layout>
-              <NotFound />
-            </Layout>
-          }
-        />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/events" element={<AdminRoute><ManageEvents /></AdminRoute>} />
+          <Route path="/admin/events/create" element={<AdminRoute><CreateEvent /></AdminRoute>} />
+          <Route path="/admin/events/:id/edit" element={<AdminRoute><EditEvent /></AdminRoute>} />
+          
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </Router>
   );

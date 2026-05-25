@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import EventList from "../components/events/EventList";
 import { Event } from "../types/Event";
 import { getAllEvents, getSavedEvents } from "../api/events";
@@ -9,52 +8,52 @@ const MODES = ["All", "Remote", "Hybrid", "In-Person"];
 const Jobs: React.FC = () => {
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState("All");
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const [jobs, setJobs] = useState<Event[]>([]);
+  const [savedEventIds, setSavedEventIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const queryFilters = useMemo(
-    () => ({
-      type: "Job",
-      mode: mode === "All" ? undefined : mode,
-      search: search || undefined,
-    }),
-    [search, mode]
-  );
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const jobsQuery = useQuery({
-    queryKey: ["jobs", queryFilters],
-    queryFn: () => getAllEvents(queryFilters, { includeMeta: false }),
-    placeholderData: (prev: any) => prev,
-  });
+  useEffect(() => {
+    const fetchSaved = async () => {
+      if (!token) return;
+      try {
+        const data = await getSavedEvents();
+        setSavedEventIds((data || []).map((e: Event) => e._id));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchSaved();
+  }, [token]);
 
-  const savedEventsQuery = useQuery({
-    queryKey: ["saved-events"],
-    queryFn: getSavedEvents,
-    enabled: Boolean(token),
-  });
-
-  const savedEventIds = useMemo(
-    () => (savedEventsQuery.data || []).map((e: Event) => e._id),
-    [savedEventsQuery.data]
-  );
-
-  const jobs = Array.isArray(jobsQuery.data)
-    ? jobsQuery.data
-    : (jobsQuery.data as any)?.events ?? [];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllEvents({
+          type: "Job",
+          mode: mode === "All" ? undefined : mode,
+          search: search || undefined,
+        }, { includeMeta: false });
+        setJobs(Array.isArray(data) ? data : data?.events ?? []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, [search, mode]);
 
   return (
     <div>
-      {/* Hero Banner */}
       <div className="category-hero jobs-hero">
         <div className="category-hero-icon">💼</div>
         <h1 className="category-hero-title">Jobs</h1>
-        <p className="category-hero-subtitle">
-          Full-time engineering, design, and tech roles at top companies —
-          with live apply links.
-        </p>
+        <p className="category-hero-subtitle">Full-time roles at top companies — with live apply links.</p>
       </div>
 
-      {/* Filters Row */}
       <div className="category-filters-row">
         <input
           id="jobs-search"
@@ -78,22 +77,12 @@ const Jobs: React.FC = () => {
         </div>
       </div>
 
-      {/* Results */}
       <div className="category-results-meta">
-        {jobsQuery.isFetching ? (
-          <span className="category-loading">Loading jobs...</span>
-        ) : (
-          <span>
-            {jobs.length} job{jobs.length !== 1 ? "s" : ""} found
-          </span>
-        )}
+        {loading ? <span>Loading...</span> : <span>{jobs.length} job{jobs.length !== 1 ? "s" : ""} found</span>}
       </div>
 
-      {!jobsQuery.isFetching && jobs.length === 0 ? (
-        <div className="category-empty">
-          <span>😕</span>
-          <p>No jobs match your search. Try different filters.</p>
-        </div>
+      {!loading && jobs.length === 0 ? (
+        <div className="category-empty"><p>No jobs match your search.</p></div>
       ) : (
         <EventList events={jobs} savedEvents={savedEventIds} />
       )}

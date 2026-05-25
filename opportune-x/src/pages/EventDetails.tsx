@@ -1,160 +1,79 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getEventDetails } from "../api/events";
 import LinkedInPostModal from "../components/events/LinkedInPostModal";
 
 const EventDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Get the event ID from the URL
+  const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showLinkedInModal, setShowLinkedInModal] = useState(false);
-  const [userName, setUserName] = useState<string>();
 
   useEffect(() => {
-    const fetchEventDetails = async () => {
+    const fetchDetails = async () => {
       if (!id) return;
       try {
         setLoading(true);
-        setError(null);
         const data = await getEventDetails(id);
         setEvent(data);
       } catch (err) {
         console.error("Error fetching event details:", err);
-        setError("Failed to load event.");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchEventDetails();
+    fetchDetails();
   }, [id]);
 
-  useEffect(() => {
-    try {
-      const userRaw =
-        typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      if (userRaw) {
-        const parsed = JSON.parse(userRaw);
-        setUserName(parsed?.name);
-      }
-    } catch {
-      setUserName(undefined);
-    }
-  }, []);
+  if (loading) return <div style={{ padding: "2rem" }}>Loading details...</div>;
+  if (!event) return <div style={{ padding: "2rem" }}>Opportunity not found.</div>;
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error || !event) {
-    return <div>{error || "Event not found"}</div>;
-  }
-
-  const organizationName = event.org || event.organization || "the organizing team";
-
-  const handleApplyClick = () => {
-    if (event.applyUrl) {
-      window.open(event.applyUrl, "_blank", "noopener,noreferrer");
-    } else {
-      alert("No apply link available for this opportunity yet.");
-    }
-  };
+  const orgName = event.org || event.organization || "the organizing team";
 
   return (
-    <div style={{ maxWidth: 800, margin: "2rem auto" }}>
+    <div style={{ maxWidth: 800, margin: "2rem auto", padding: "0 1rem" }}>
       <h2>{event.title}</h2>
-      {organizationName && (
-        <p style={{ color: "#6b7280" }}>Organized by {organizationName}</p>
-      )}
-      {event.type && (
-        <p style={{ color: "#6b7280", fontSize: "0.9rem" }}>Type: {event.type}</p>
-      )}
-      {event.source && (
-        <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>
-          Source:{" "}
-          {event.sourceUrl ? (
-            <a
-              href={event.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: "#60a5fa" }}
-            >
-              {event.source}
-            </a>
-          ) : (
-            event.source
-          )}
-        </p>
-      )}
-      {event.description && <p style={{ marginTop: "1rem" }}>{event.description}</p>}
-
-      <div style={{ marginTop: "1rem", fontSize: "0.9rem", color: "#6b7280" }}>
-        {event.location && (
-          <p>
-            <strong>Location:</strong> {event.location}
-          </p>
-        )}
-        {event.mode && (
-          <p>
-            <strong>Mode:</strong> {event.mode}
-          </p>
-        )}
-        {event.deadline && (
-          <p>
-            <strong>Deadline:</strong>{" "}
-            {new Date(event.deadline).toLocaleDateString()}
-          </p>
-        )}
-        {event.tags && event.tags.length > 0 && (
-          <p>
-            <strong>Tags:</strong> {event.tags.join(", ")}
-          </p>
-        )}
+      <p style={{ color: "#6b7280", margin: "0.5rem 0" }}>Organized by {orgName}</p>
+      
+      <div style={{ display: "flex", gap: "10px", margin: "1rem 0", fontSize: "0.9rem" }}>
+        <span className="event-badge">{event.type || "Opportunity"}</span>
+        <span className="event-badge" style={{ background: "#e5e7eb", color: "#374151" }}>{event.mode || "Flexible"}</span>
       </div>
 
-      <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem" }}>
+      {event.description && (
+        <div style={{ margin: "2rem 0", lineHeight: "1.6" }}>
+          <h3>About the Opportunity</h3>
+          <p>{event.description}</p>
+        </div>
+      )}
+
+      <div style={{ background: "#f3f4f6", padding: "1rem", borderRadius: "8px", margin: "1.5rem 0", fontSize: "0.9rem" }}>
+        {event.location && <p><strong>Location:</strong> {event.location}</p>}
+        {event.deadline && <p><strong>Deadline:</strong> {new Date(event.deadline).toLocaleDateString()}</p>}
+        {event.tags && event.tags.length > 0 && <p><strong>Tags:</strong> {event.tags.join(", ")}</p>}
+      </div>
+
+      <div style={{ display: "flex", gap: "12px", marginTop: "2rem" }}>
         {event.applyUrl && (
           <button
-            onClick={handleApplyClick}
-            style={{
-              padding: "10px 14px",
-              background: "#16a34a",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
+            onClick={() => window.open(event.applyUrl, "_blank", "noopener,noreferrer")}
+            style={{ padding: "10px 20px", background: "#16a34a", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
           >
-            Apply now
+            Apply Now
           </button>
         )}
 
         <button
           onClick={() => setShowLinkedInModal(true)}
-          style={{
-            padding: "10px 14px",
-            background: "#0a66c2",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
+          style={{ padding: "10px 20px", background: "#0a66c2", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
         >
-          Generate LinkedIn post
+          Generate LinkedIn Post
         </button>
       </div>
 
       {showLinkedInModal && (
         <LinkedInPostModal
-          event={{
-            title: event.title,
-            organization: organizationName,
-            type: event.type,
-            mode: event.mode,
-          }}
-          userName={userName}
+          event={{ title: event.title, organization: orgName, type: event.type, mode: event.mode }}
           onClose={() => setShowLinkedInModal(false)}
         />
       )}

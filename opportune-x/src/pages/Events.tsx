@@ -1,173 +1,73 @@
-import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import EventList from "../components/events/EventList";
 import EventFilters, { Filters } from "../components/events/EventFilters";
 import { Event } from "../types/Event";
-import { EventQueryParams, getAllEvents, getSavedEvents } from "../api/events";
-import { getPreferences } from "../api/user";
+import { getAllEvents, getSavedEvents } from "../api/events";
 
 const Events: React.FC = () => {
-  const [filters, setFilters] = useState<Filters>({
-    type: "All",
-    mode: "All",
-  });
+  const [filters, setFilters] = useState<Filters>({ type: "All", mode: "All", search: "" });
   const [showFilters, setShowFilters] = useState(false);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [savedEventIds, setSavedEventIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const queryFilters: EventQueryParams = useMemo(() => {
-    return {
-      type: filters.type === "All" ? undefined : filters.type,
-      mode: filters.mode === "All" ? undefined : filters.mode,
-      source: filters.source || undefined,
-      search: filters.search || undefined,
-      deadlineFrom: filters.deadlineFrom || undefined,
-      deadlineTo: filters.deadlineTo || undefined,
-      tags: filters.tags && filters.tags.length > 0 ? filters.tags : undefined,
-      sortBy: "deadline",
+  useEffect(() => {
+    const fetchSaved = async () => {
+      if (!token) return;
+      try {
+        const data = await getSavedEvents();
+        setSavedEventIds((data || []).map((e: Event) => e._id));
+      } catch (err) {
+        console.error(err);
+      }
     };
+    fetchSaved();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllEvents({
+          type: filters.type === "All" ? undefined : filters.type,
+          mode: filters.mode === "All" ? undefined : filters.mode,
+          search: filters.search || undefined,
+        }, { includeMeta: false });
+        setAllEvents(data.events || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOpportunities();
   }, [filters]);
 
-  const eventsQuery = useQuery({
-    queryKey: ["events", queryFilters],
-    queryFn: () => getAllEvents(queryFilters, { includeMeta: true }),
-    placeholderData: (previousData) => previousData,
-  });
-
-  const savedEventsQuery = useQuery({
-    queryKey: ["saved-events"],
-    queryFn: getSavedEvents,
-    enabled: Boolean(token),
-  });
-
-  const preferencesQuery = useQuery({
-    queryKey: ["preferred-types"],
-    queryFn: getPreferences,
-    enabled: Boolean(token),
-  });
-
-  const recommendedQuery = useQuery({
-    queryKey: [
-      "recommended-events",
-      preferencesQuery.data?.preferredTypes ?? [],
-    ],
-    queryFn: () =>
-      getAllEvents(
-        {
-          preferredTypes: preferencesQuery.data?.preferredTypes ?? [],
-          limit: 6,
-          sortBy: "featured",
-        },
-        { includeMeta: false }
-      ),
-    enabled:
-      Boolean(token) &&
-      Boolean(preferencesQuery.data?.preferredTypes?.length),
-  });
-
-  const savedEventIds = useMemo(
-    () => (savedEventsQuery.data || []).map((event: Event) => event._id),
-    [savedEventsQuery.data]
-  );
-
-  if (eventsQuery.isPending) {
-    return <div>Loading events...</div>;
-  }
-
-  if (eventsQuery.error) {
-    return <div>Failed to load events. Please try again later.</div>;
-  }
-
-  const allEvents = eventsQuery.data?.events ?? [];
-  const meta = eventsQuery.data?.meta;
-  const recommendedEvents = recommendedQuery.data?.events ?? [];
+  if (loading && allEvents.length === 0) return <div style={{ padding: "2rem" }}>Loading...</div>;
 
   return (
     <div>
       <div className="page-header">
         <h2 className="page-title">All Opportunities</h2>
-        <p className="page-subtitle">
-          Browse hackathons, internships, challenges and fests in one place.
-        </p>
-        {meta && (
-          <p className="page-meta">
-            Showing {meta.total} results. Top sources:{" "}
-            {Object.entries(meta.countsBySource || {})
-              .slice(0, 3)
-              .map(([sourceName, count]) => `${sourceName} (${count})`)
-              .join(", ") || "varied"}
-          </p>
-        )}
+        <p className="page-subtitle">Browse hackathons, internships, challenges and fests in one place.</p>
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <button
-          className={`btn ${showFilters ? "btn-primary" : "btn-ghost"}`}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-          </svg>
-          {showFilters ? "Hide Filters" : "Show Filters"}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <button className={`btn ${showFilters ? "btn-primary" : "btn-ghost"}`} onClick={() => setShowFilters(!showFilters)}>
+          🔍 {showFilters ? "Hide Filters" : "Show Filters"}
         </button>
       </div>
 
-      <div className="events-layout">
+      <div className="events-layout" style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
         {showFilters && (
-          <aside className="events-filters">
+          <aside className="events-filters" style={{ flex: "1 1 250px" }}>
             <EventFilters onFilterChange={setFilters} initial={filters} />
           </aside>
         )}
-
-        <section className="events-list">
-          {preferencesQuery.data?.preferredTypes?.length ? (
-            <section style={{ marginBottom: "1.5rem" }}>
-              <h3>Recommended for you</h3>
-              <p style={{ fontSize: "0.9rem", color: "#6b7280" }}>
-                Based on your preferences.
-              </p>
-              {recommendedQuery.isPending ? (
-                <p>Loading recommended events...</p>
-              ) : recommendedEvents.length === 0 ? (
-                <p>No recommended events right now.</p>
-              ) : (
-                <EventList
-                  events={recommendedEvents}
-                  savedEvents={savedEventIds}
-                />
-              )}
-            </section>
-          ) : (
-            token && (
-              <section className="recommended-hint">
-                <p>
-                  Set your preferences in the Dashboard to receive personalized
-                  recommendations.
-                </p>
-              </section>
-            )
-          )}
-
-          {eventsQuery.isFetching && (
-            <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>
-              Updating results...
-            </p>
-          )}
-
-          {allEvents.length === 0 ? (
-            <p>No events match your filters yet.</p>
-          ) : (
-            <EventList events={allEvents} savedEvents={savedEventIds} />
-          )}
+        <section className="events-list" style={{ flex: "3 1 600px" }}>
+          {allEvents.length === 0 ? <p>No opportunities found.</p> : <EventList events={allEvents} savedEvents={savedEventIds} />}
         </section>
       </div>
     </div>

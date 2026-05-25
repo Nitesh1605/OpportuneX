@@ -4,115 +4,58 @@ import { getAdminStats, AdminStats } from "../api/admin";
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const data = await getAdminStats();
         setStats(data);
       } catch (err) {
         console.error("Failed to load admin stats", err);
-        setError("Failed to load admin stats");
       } finally {
         setLoading(false);
       }
     };
-
     load();
   }, []);
 
-  if (loading) {
-    return <div style={{ padding: 20 }}>Loading admin stats...</div>;
-  }
-
-  if (error) {
-    return <div style={{ padding: 20, color: "red" }}>{error}</div>;
-  }
-
-  if (!stats) {
-    return <div style={{ padding: 20 }}>No stats available.</div>;
-  }
+  if (loading) return <div style={{ padding: 20 }}>Loading admin stats...</div>;
+  if (!stats) return <div style={{ padding: 20 }}>No analytics available.</div>;
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: "0 1rem", maxWidth: 800, margin: "2rem auto" }}>
       <h1>Admin Dashboard</h1>
-      <p style={{ color: "#6b7280", maxWidth: 600 }}>
-        Create and manage opportunities (hackathons, internships, challenges,
-        fests) that will appear in the student portal. Below you can also see
-        high-level platform analytics.
-      </p>
+      <p style={{ color: "#6b7280" }}>Manage student portal opportunities and review site analytics below.</p>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
-        <Link to="/admin/events/create">
-          <button>Create New Event</button>
-        </Link>
-
-        <Link to="/admin/events">
-          <button>Manage Events</button>
-        </Link>
+      <div style={{ margin: "1.5rem 0", display: "flex", gap: 12 }}>
+        <Link to="/admin/events/create"><button className="btn btn-primary">Create Event</button></Link>
+        <Link to="/admin/events"><button className="btn btn-ghost">Manage Events</button></Link>
       </div>
 
-      <hr style={{ margin: "24px 0" }} />
+      <hr style={{ margin: "2rem 0", borderColor: "#e5e7eb" }} />
 
       <h2>Platform Analytics</h2>
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          marginTop: 12,
-          marginBottom: 24,
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 8,
-            border: "1px solid #e5e7eb",
-            minWidth: 160,
-          }}
-        >
-          <h3>Total Users</h3>
-          <p style={{ fontSize: 24, fontWeight: 600 }}>{stats.userCount}</p>
-        </div>
-
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 8,
-            border: "1px solid #e5e7eb",
-            minWidth: 160,
-          }}
-        >
-          <h3>Total Events</h3>
-          <p style={{ fontSize: 24, fontWeight: 600 }}>{stats.eventCount}</p>
-        </div>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "1rem 0" }}>
+        {[{ label: "Total Users", val: stats.userCount }, { label: "Total Events", val: stats.eventCount }].map((c) => (
+          <div key={c.label} style={{ padding: 16, borderRadius: 8, border: "1px solid #e5e7eb", minWidth: 160, background: "#f9fafb" }}>
+            <h4 style={{ margin: 0, color: "#6b7280" }}>{c.label}</h4>
+            <p style={{ fontSize: 28, fontWeight: 700, margin: "0.5rem 0 0 0" }}>{c.val}</p>
+          </div>
+        ))}
       </div>
 
-      <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "3rem", flexWrap: "wrap", marginTop: "2rem" }}>
         <div>
-          <h3>Events by Type</h3>
+          <h3>Opportunities by Type</h3>
           <ul>
-            {stats.eventsByType.map((t) => (
-              <li key={t._id || "unknown"}>
-                <strong>{t._id || "Unknown"}</strong>: {t.count}
-              </li>
-            ))}
+            {stats.eventsByType.map((t) => <li key={t._id || "unknown"}><b>{t._id || "Other"}s:</b> {t.count}</li>)}
           </ul>
         </div>
-
         <div>
-          <h3>Events by Source</h3>
+          <h3>Opportunities by Source</h3>
           <ul>
-            {stats.eventsBySource.map((s) => (
-              <li key={s._id || "unknown"}>
-                <strong>{s._id || "Unknown"}</strong>: {s.count}
-              </li>
-            ))}
+            {stats.eventsBySource.map((s) => <li key={s._id || "unknown"}><b>{s._id || "Direct"}:</b> {s.count}</li>)}
           </ul>
         </div>
       </div>
