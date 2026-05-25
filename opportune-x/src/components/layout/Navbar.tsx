@@ -26,6 +26,12 @@ const Navbar: React.FC = () => {
           <NavLink to="/events" className="nav-link">
             Events
           </NavLink>
+          <NavLink to="/jobs" className="nav-link">
+            Jobs
+          </NavLink>
+          <NavLink to="/internships" className="nav-link">
+            Internships
+          </NavLink>
           <NavLink to="/dashboard" className="nav-link">
             Dashboard
           </NavLink>

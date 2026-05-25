@@ -947,3 +947,145 @@ body {
     padding: 1rem 0.75rem;
   }
 }
+
+/* ============================================================
+   Category Pages: Jobs & Internships
+   ============================================================ */
+
+.category-hero {
+  border-radius: 1.2rem;
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-size: 24px 24px;
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+}
+
+.jobs-hero {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.12);
+}
+
+.internships-hero {
+  background: linear-gradient(135deg, #1a3a2f 0%, #0f172a 100%);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 40px rgba(34, 197, 94, 0.12);
+}
+
+.category-hero-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.category-hero-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+  line-height: 1.15;
+}
+
+.jobs-hero .category-hero-title {
+  background: linear-gradient(135deg, #93c5fd, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.internships-hero .category-hero-title {
+  background: linear-gradient(135deg, #86efac, #4ade80, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.category-hero-subtitle {
+  font-size: 0.92rem;
+  color: #9ca3af;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Filter row */
+.category-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.category-search {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0 !important;
+}
+
+.category-mode-pills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.mode-pill {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.7);
+}
+
+.mode-pill-active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Results meta */
+.category-results-meta {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin-bottom: 0.75rem;
+}
+
+.category-loading {
+  color: #60a5fa;
+  font-style: italic;
+}
+
+/* Empty state */
+.category-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.category-empty span {
+  font-size: 2.5rem;
+}

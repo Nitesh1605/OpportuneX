@@ -4,6 +4,8 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Events from "./pages/Events";
+import Jobs from "./pages/Jobs";
+import Internships from "./pages/Internships";
 import Dashboard from "./pages/Dashboard";
 import EventDetails from "./pages/EventDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -43,6 +45,22 @@ const App: React.FC = () => {
           element={
             <Layout>
               <EventDetails />
+            </Layout>
+          }
+        />
+        <Route
+          path="/jobs"
+          element={
+            <Layout>
+              <Jobs />
+            </Layout>
+          }
+        />
+        <Route
+          path="/internships"
+          element={
+            <Layout>
+              <Internships />
             </Layout>
           }
         />
