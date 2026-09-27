@@ -8,6 +8,10 @@ Base URL in development:
 
 All JSON examples are illustrative and may be trimmed.
 
+Rate limits: all `/api/*` routes are limited to 300 requests/minute per IP; `/api/auth/*` routes are additionally limited to 20 requests per 15 minutes per IP.
+
+Request bodies validated by Joi respond with `400` and `{ "msg": "Validation failed", "details": ["..."] }` when invalid.
+
 ---
 
 ## Authentication
@@ -18,9 +22,9 @@ Register a new user.
 
 - **Auth**: Public
 - **Body**
-  - `name` (string, required)
+  - `name` (string, required, 2–50 chars)
   - `email` (string, required, valid email)
-  - `password` (string, required, min 6 chars)
+  - `password` (string, required, 6–100 chars)
 
 **Response 201**
 
@@ -36,6 +40,9 @@ Register a new user.
 }
 ```
 
+**Errors**
+- `400` – validation failed / email already exists
+
 ---
 
 ### POST /api/auth/login
@@ -44,8 +51,8 @@ Log an existing user in.
 
 - **Auth**: Public
 - **Body**
-  - `email` (string, required)
-  - `password` (string, required)
+  - `email` (string, required, valid email)
+  - `password` (string, required, 6–100 chars)
 
 **Response 200** – same shape as `/register`.
 
@@ -63,15 +70,19 @@ List all events with optional filtering.
 
 - **Auth**: Public
 - **Query params** (all optional):
-  - `type`, `mode`, `source` – exact match filters.
+  - `type` – exact match filter (`All` is ignored).
+  - `mode` – case-insensitive exact match (`All` is ignored).
+  - `source` – case-insensitive partial match.
   - `search` – fuzzy search across `title` and `org`.
   - `tags` – comma-separated list (matches events containing every tag).
   - `deadlineFrom` / `deadlineTo` – ISO dates to constrain deadlines.
-  - `preferredTypes` – comma-separated list to fetch recommended events.
+  - `preferredTypes` – comma-separated list to fetch recommended events (overrides `type`).
   - `featured` – set to `true` to fetch highlighted events only.
+  - `limit` – maximum number of events to return.
+  - `sortBy` – `newest` (createdAt desc), `featured` (featured first, then deadline asc); default is deadline asc, then createdAt desc.
   - `includeMeta` – set to `true` to include type/source counts.
 
-**Response 200**
+**Response 200** – an array of event documents. When `includeMeta=true` the response is wrapped:
 
 ```json
 {
@@ -149,11 +160,14 @@ Create a new event. Admin only.
   - `applyUrl` (string, required, valid URL)
   - `type` (string, optional)
   - `source` (string, optional)
+  - `sourceUrl` (string, optional, valid URL)
   - `mode` (string, optional – e.g. `Online`, `Offline`, `Hybrid`)
   - `location` (string, optional)
-  - `deadline` (string or null, optional)
+  - `deadline` (ISO date string or null, optional)
   - `tags` (string[], optional)
   - `description` (string, optional)
+  - `featured` (boolean, optional)
+  - `collectedAt` (ISO date string or null, optional – defaults to now when omitted)
 
 **Response 201** – created event document.
 
@@ -172,7 +186,7 @@ Update an existing event. Admin only.
 - **Headers**
   - `Authorization: Bearer <jwt>`
 - **Body**
-  - Same shape as `POST /api/events`.
+  - Same shape as `POST /api/events` (`collectedAt` is not defaulted on update).
 
 **Response 200** – updated event document.
 
@@ -337,13 +351,13 @@ Return alert buckets (new matches, saved deadlines, closing soon) together with 
 
 ### GET /api/user/alerts/preferences
 
-Read alert preferences only. Same response shape as above (without alert buckets when cached).
+Read alert preferences only.
 
----
+- **Auth**: Required (user)
+- **Headers**
+  - `Authorization: Bearer <jwt>`
 
-### PUT /api/user/alerts/preferences
-
-Update alert preferences. Body accepts any subset of:
+**Response 200**
 
 ```json
 {
@@ -353,6 +367,85 @@ Update alert preferences. Body accepts any subset of:
   "lookbackDays": 7
 }
 ```
+
+---
+
+### PUT /api/user/alerts/preferences
+
+Update alert preferences.
+
+- **Auth**: Required (user)
+- **Headers**
+  - `Authorization: Bearer <jwt>`
+- **Body** – any subset of:
+
+```json
+{
+  "newMatches": true,
+  "weeklyDigest": false,
+  "deadlineReminderDays": 3,
+  "lookbackDays": 7
+}
+```
+
+**Response 200** – the updated preferences object (same shape as `GET /api/user/alerts/preferences`).
+
+**Errors**
+- `400` – `deadlineReminderDays` or `lookbackDays` is not a number ≥ 1
+
+---
+
+### GET /api/user/profile
+
+Get the authenticated user's full profile, with `savedEvents` populated.
+
+- **Auth**: Required (user)
+- **Headers**
+  - `Authorization: Bearer <jwt>`
+
+**Response 200**
+
+```json
+{
+  "_id": "...",
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "isAdmin": false,
+  "savedEvents": [/* event documents */],
+  "preferredTypes": ["Hackathon"],
+  "alertPreferences": { "newMatches": true, "weeklyDigest": false, "deadlineReminderDays": 3, "lookbackDays": 7 },
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+---
+
+### PUT /api/user/profile
+
+Update the authenticated user's profile. Only provided fields are changed.
+
+- **Auth**: Required (user)
+- **Headers**
+  - `Authorization: Bearer <jwt>`
+- **Body** (all optional)
+  - `name` (string)
+  - `email` (string)
+  - `password` (string)
+
+**Response 200**
+
+```json
+{
+  "_id": "...",
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "isAdmin": false
+}
+```
+
+**Errors**
+- `404` – user not found
 
 ---
 

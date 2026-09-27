@@ -18,6 +18,8 @@ Students often miss great opportunities because they're scattered across LinkedI
 - 🔍 **Browse & Search**: Filter by category, mode (Remote / Hybrid / In-Person), and text searches instantly.
 - 💾 **Save Opportunities**: Bookmark opportunities and manage them directly from your personal Dashboard.
 - 🔗 **Live Apply Links**: Every opportunity links directly to the official application pages.
+- 🔔 **Personalised Alerts**: Set preferred opportunity types and get new-match, deadline-reminder, and closing-soon alerts tuned to your alert preferences.
+- 👤 **Profile Management**: View and update your name, email, and password.
 - 💼 **1-Click LinkedIn Post**: Auto-generate a professional LinkedIn update to share your learning journey.
 
 ### For Admins
@@ -74,14 +76,21 @@ OpportuneX/
 |---|---|---|---|
 | `POST` | `/api/auth/register` | Public | Register a new user |
 | `POST` | `/api/auth/login` | Public | Login, returns JWT |
-| `GET` | `/api/events` | Public | List opportunities (type, mode, search filters) |
+| `GET` | `/api/events` | Public | List opportunities (type, mode, source, search, tags, deadline, featured, limit, sort filters) |
 | `GET` | `/api/events/:id` | Public | Single opportunity details |
 | `POST` | `/api/events` | Admin | Create opportunity |
 | `PUT` | `/api/events/:id` | Admin | Update opportunity |
 | `DELETE` | `/api/events/:id` | Admin | Delete opportunity |
 | `GET` | `/api/user/saved-events` | User | Get saved opportunities |
 | `POST` | `/api/user/save-event` | User | Bookmark opportunity |
-| `DELETE` | `/api/user/save-event/:id` | User | Remove bookmarked opportunity |
+| `DELETE` | `/api/user/save-event/:eventId` | User | Remove bookmarked opportunity |
+| `GET` | `/api/user/preferences` | User | Get preferred opportunity types |
+| `PUT` | `/api/user/preferences` | User | Update preferred opportunity types |
+| `GET` | `/api/user/alerts` | User | Get alert buckets (new matches, deadline reminders, closing soon) |
+| `GET` | `/api/user/alerts/preferences` | User | Get alert preferences |
+| `PUT` | `/api/user/alerts/preferences` | User | Update alert preferences |
+| `GET` | `/api/user/profile` | User | Get own profile (with saved opportunities) |
+| `PUT` | `/api/user/profile` | User | Update own name / email / password |
 | `GET` | `/api/admin/stats` | Admin | Site analytics statistics |
 
 ---
